@@ -37,7 +37,6 @@ public class SessionService {
     public Session login(String user, String password) throws NoSuchAlgorithmException {
         Volunteer volunteer = volunteerService.getVolunteerByVolunteerCode(user);
         StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
-        System.out.println(password + " - " + volunteer.getUserPassword());
         if (passwordEncryptor.checkPassword(password, volunteer.getUserPassword())) {
             Date currentDate = new Date();
             Calendar c = Calendar.getInstance();

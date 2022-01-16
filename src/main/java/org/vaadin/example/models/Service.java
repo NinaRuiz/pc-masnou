@@ -50,6 +50,17 @@ public class Service {
     @Transient
     private List<ServiceComment> comments;
 
+    @Transient
+    private List<UploadedFile> files;
+
+    public List<UploadedFile> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<UploadedFile> files) {
+        this.files = files;
+    }
+
     public List<Volunteer> getVolunteers() {
         return volunteers;
     }

@@ -6,6 +6,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
 import com.vaadin.flow.component.messages.MessageInput;
@@ -26,10 +27,7 @@ import com.vaadin.flow.server.VaadinSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.example.components.EndSessionComponent;
 import org.vaadin.example.layouts.MainLayout;
-import org.vaadin.example.models.Service;
-import org.vaadin.example.models.ServiceComment;
-import org.vaadin.example.models.Vehicle;
-import org.vaadin.example.models.Volunteer;
+import org.vaadin.example.models.*;
 import org.vaadin.example.services.ServicesService;
 import org.vaadin.example.services.SessionService;
 import org.vaadin.example.services.VehicleService;
@@ -42,6 +40,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -69,6 +68,7 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
     MultiSelectListBox<Volunteer> volunteerListBox;
     MultiSelectListBox<Vehicle> vehicleListBox;
     MessageList commentMessageList;
+    Grid<UploadedFile> uploadedFileGrid;
 
 
 
@@ -226,9 +226,11 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
             messageInput.addSubmitListener(submitEvent -> {
                 if (submitEvent.isFromClient()) {
                     List<MessageListItem> messageListItemList = new ArrayList<>(commentMessageList.getItems());
+                    Volunteer volunteer = volunteerService.getVolunteerById(SessionService.session.getVolunteerId());
                     MessageListItem messageListItem = new MessageListItem(
                             submitEvent.getValue(),
-                            LocalDateTime.now().toInstant(ZoneOffset.UTC), "test");
+                            new Date().toInstant(),
+                            volunteer.getVolunteerCode() + " - " + volunteer.getFirstname() + " " + volunteer.getFirstlastname());
                     messageListItemList.add(messageListItem);
                     commentMessageList.setItems(messageListItemList);
                     service.setComments(new ArrayList<>());
@@ -236,11 +238,17 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
                         ServiceComment serviceComment = new ServiceComment();
                         serviceComment.setCommentDatetime(Date.from(messageListItem1.getTime()));
                         serviceComment.setCommentMessage(messageListItem1.getText());
-                        serviceComment.setUserId(0);
+                        serviceComment.setUserId(SessionService.session.getVolunteerId());
                         return serviceComment;
                     }).collect(Collectors.toList()));
                 }
             });
+
+            uploadedFileGrid = new Grid<>();
+            uploadedFileGrid.setAllRowsVisible(true);
+            uploadedFileGrid.addColumn(UploadedFile::getUploadDate).setHeader("");
+            uploadedFileGrid.addColumn(UploadedFile::getFileName).setHeader("Archivos");
+
 
             MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
             Upload upload = new Upload(buffer);
@@ -255,11 +263,18 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
         gmaps.setVisible(true);*/
 
             upload.addSucceededListener(event -> {
-                String fileName = event.getFileName();
-                InputStream inputStream = buffer.getInputStream(fileName);
-                File file = new File("./src/main/resources/uploadFiles/" + fileName);
+                UploadedFile uploadedFile = new UploadedFile();
+                uploadedFile.setUploadDate(new Date());
+                uploadedFile.setFileName(event.getFileName());
+                uploadedFile.setFilePath("./src/main/resources/uploadFiles/" + event.getFileName());
+                InputStream inputStream = buffer.getInputStream(uploadedFile.getFileName());
+                File file = new File(uploadedFile.getFilePath());
                 try {
                     copyInputStreamToFile(inputStream, file);
+                    if (service.getFiles() == null) {
+                        service.setFiles(new ArrayList<>());
+                    }
+                    service.getFiles().add(uploadedFile);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -276,7 +291,8 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
                     endKmTextField,
                     bossSelect);
 
-            verticalLayout.add(formLayout, label, volunteerListBox, label1, vehicleListBox, commentMessageList, upload, messageInput);
+            verticalLayout.add(formLayout, label, volunteerListBox, label1, vehicleListBox, commentMessageList,
+                    uploadedFileGrid, upload, messageInput);
 
             setContent(verticalLayout);
         }
@@ -352,9 +368,14 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
                         MessageListItem messageListItem = new MessageListItem();
                         messageListItem.setText(serviceComment.getCommentMessage());
                         messageListItem.setTime(serviceComment.getCommentDatetime().toInstant());
-                        messageListItem.setUserName("Test");
+                        Volunteer volunteer = volunteerService.getVolunteerById(serviceComment.getUserId());
+                        messageListItem.setUserName(
+                                volunteer.getVolunteerCode() +
+                                " - " + volunteer.getFirstname() + " " + volunteer.getFirstlastname());
                         return messageListItem;
                     }).collect(Collectors.toList()));
+
+            uploadedFileGrid.setItems(service.getFiles());
         }
     }
 }

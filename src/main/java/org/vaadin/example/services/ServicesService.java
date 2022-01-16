@@ -16,16 +16,19 @@ public class ServicesService {
     private final VolunteerService volunteerService;
     private final VehicleService vehicleService;
     private final ServiceCommentsService serviceCommentsService;
+    private final ServiceFilesService serviceFilesService;
 
     @Autowired
     public ServicesService(ServicesRepository servicesRepository,
                            VolunteerService volunteerService,
                            VehicleService vehicleService,
-                           ServiceCommentsService serviceCommentsService) {
+                           ServiceCommentsService serviceCommentsService,
+                           ServiceFilesService serviceFilesService) {
         this.servicesRepository = servicesRepository;
         this.volunteerService = volunteerService;
         this.vehicleService = vehicleService;
         this.serviceCommentsService = serviceCommentsService;
+        this.serviceFilesService = serviceFilesService;
     }
 
     public org.vaadin.example.models.Service getServiceById(Long id){
@@ -35,6 +38,7 @@ public class ServicesService {
             service.get().setVehicles(vehicleService.getVehiclesByServiceId(service.get().getId().intValue()));
             service.get().setComments(serviceCommentsService.getServiceCommentsByServiceId(service.get().getId().intValue()));
             service.get().setBossVolunteer(volunteerService.getVolunteerById(service.get().getBoss()));
+            service.get().setFiles(serviceFilesService.getServiceUploadedFiles(service.get().getId().intValue()));
             return service.get();
         } else {
             return null;
@@ -54,6 +58,8 @@ public class ServicesService {
         vehicleService.saveServiceVehicles(service.getVehicles(), newService.getId().intValue());
         serviceCommentsService.deleteServiceCommentsByServiceId(newService.getId().intValue());
         serviceCommentsService.saveServiceComments(service.getComments(), newService.getId().intValue());
+        serviceFilesService.deleteServiceFiles(service.getId().intValue());
+        serviceFilesService.saveServiceUploadedFiles(service.getFiles(), newService.getId().intValue());
     }
 
 }
