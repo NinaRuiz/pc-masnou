@@ -10,4 +10,6 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     public Session findByIpAddress(String ipAddress);
 
     public void deleteByExpirationDateBeforeAndIpAddress(Date expirationDate, String ipAddress);
+
+    public void deleteByIpAddress(String ipAddress);
 }

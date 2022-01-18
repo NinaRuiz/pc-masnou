@@ -62,6 +62,11 @@ public class SessionService {
         return sessionRepository.findByIpAddress(ipAddress);
     }
 
+    @Transactional
+    public void deleteSessionByIp(String ipAddress) {
+        sessionRepository.deleteByIpAddress(ipAddress);
+    }
+
     private void deleteExpiredSession(String ipAddress) {
         sessionRepository.deleteByExpirationDateBeforeAndIpAddress(new Date(), ipAddress);
     }

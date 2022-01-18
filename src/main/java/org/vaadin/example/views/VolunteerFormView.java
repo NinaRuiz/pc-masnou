@@ -8,6 +8,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,7 @@ import java.security.NoSuchAlgorithmException;
 
 
 @Route("/volunteer/edit")
-public class VolunteerFormView extends MainLayout {
+public class VolunteerFormView extends MainLayout implements HasUrlParameter<String> {
 
     Volunteer volunteer;
 
@@ -31,6 +33,8 @@ public class VolunteerFormView extends MainLayout {
     TextField secondLastnameTextField;
     PasswordField passwordField;
     PasswordField repeatPasswordField;
+
+    Boolean showPassword = true;
 
     VolunteerService volunteerService;
 
@@ -129,6 +133,19 @@ public class VolunteerFormView extends MainLayout {
             volunteerService.saveVolunteer(volunteer);
         } else {
             Notification.show("Las contrasenyas no coincideixen.");
+        }
+    }
+
+    @Override
+    public void setParameter(BeforeEvent beforeEvent, String s) {
+        if(!"new".equals(s) && SessionService.session != null) {
+            volunteer = volunteerService.getVolunteerById(Integer.parseInt(s));
+            volunteerCodeTextField.setValue(volunteer.getVolunteerCode());
+            firstnameTextField.setValue(volunteer.getFirstname());
+            firstLastnameTextField.setValue(volunteer.getFirstlastname());
+            secondLastnameTextField.setValue(volunteer.getSecondlastname());
+            passwordField.setVisible(false);
+            repeatPasswordField.setVisible(false);
         }
     }
 }

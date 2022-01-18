@@ -11,6 +11,7 @@ import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.RouterLink;
 import org.vaadin.example.MainView;
 import org.vaadin.example.views.HomeView;
+import org.vaadin.example.views.ProfileView;
 import org.vaadin.example.views.ServicesListView;
 import org.vaadin.example.views.VolunteersListView;
 
@@ -31,6 +32,7 @@ public class MainLayout extends AppLayout {
         tabs.add(createTab("Serveis", ServicesListView.class));
         tabs.add(createTab("Voluntaris", VolunteersListView.class));
         tabs.add(createTab("Noticies", HomeView.class));
+        tabs.add(createTab("Perfil", ProfileView.class));
         tabs.setOrientation(Tabs.Orientation.VERTICAL);
         tabs.addThemeVariants(TabsVariant.LUMO_MINIMAL);
 

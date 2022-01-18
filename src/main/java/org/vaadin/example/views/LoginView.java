@@ -1,5 +1,6 @@
 package org.vaadin.example.views;
 
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -21,6 +22,7 @@ public class LoginView extends VerticalLayout {
 
         Button enter = new Button();
         enter.setText("Entrar");
+        enter.addClickShortcut(Key.ENTER);
         enter.addClickListener(clickEvent -> {
             try {
                 SessionService.session = sessionService.login(userName.getValue(), passwordField.getValue());

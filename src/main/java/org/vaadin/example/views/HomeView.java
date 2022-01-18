@@ -2,6 +2,7 @@ package org.vaadin.example.views;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
@@ -22,16 +23,8 @@ public class HomeView extends MainLayout {
             setContent(new EndSessionComponent());
         } else {
 
-            HorizontalLayout horizontalLayout = new HorizontalLayout();
-            horizontalLayout.setWidthFull();
+            setContent(new Label("Proximamente..."));
 
-            Button createService = new Button();
-            createService.setText("Noticias");
-            createService.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
-            horizontalLayout.add(createService);
-
-            setContent(horizontalLayout);
         }
 
     }

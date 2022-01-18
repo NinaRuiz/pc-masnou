@@ -7,6 +7,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.listbox.MultiSelectListBox;
 import com.vaadin.flow.component.messages.MessageInput;
@@ -20,10 +21,13 @@ import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MultiFileMemoryBuffer;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.example.components.EndSessionComponent;
 import org.vaadin.example.layouts.MainLayout;
@@ -33,10 +37,7 @@ import org.vaadin.example.services.SessionService;
 import org.vaadin.example.services.VehicleService;
 import org.vaadin.example.services.VolunteerService;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -248,6 +249,7 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
             uploadedFileGrid.setAllRowsVisible(true);
             uploadedFileGrid.addColumn(UploadedFile::getUploadDate).setHeader("");
             uploadedFileGrid.addColumn(UploadedFile::getFileName).setHeader("Archivos");
+            uploadedFileGrid.addComponentColumn(item -> new Anchor(getStreamResource(item.getFileName(), new File(item.getFilePath())), "descargar"));
 
 
             MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
@@ -377,5 +379,16 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
 
             uploadedFileGrid.setItems(service.getFiles());
         }
+    }
+
+    public StreamResource getStreamResource(String filename, File content) {
+        return new StreamResource(filename, () -> {
+            try {
+                return new ByteArrayInputStream(FileUtils.readFileToByteArray(content));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
     }
 }

@@ -41,7 +41,7 @@ public class VolunteersListView extends MainLayout {
             createService.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             createService.addClickListener(buttonClickEvent -> {
                 createService.getUI().ifPresent(ui -> {
-                    ui.navigate("/volunteer/edit");
+                    ui.navigate("/volunteer/edit/new");
                 });
             });
 
@@ -51,7 +51,7 @@ public class VolunteersListView extends MainLayout {
             grid.addColumn(Volunteer::getVolunteerCode).setHeader("Codi de voluntari");
             grid.addItemClickListener(serviceItemClickEvent -> {
                 grid.getUI().ifPresent(ui -> {
-                    // ui.navigate("/services/edit/" + serviceItemClickEvent.getItem().getId());
+                    ui.navigate("/volunteer/edit/" + serviceItemClickEvent.getItem().getId());
                 });
             });
 
