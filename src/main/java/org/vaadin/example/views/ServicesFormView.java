@@ -13,6 +13,7 @@ import com.vaadin.flow.component.listbox.MultiSelectListBox;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.component.messages.MessageListItem;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -316,6 +317,8 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
     private void saveService() {
         if (validateForm()) {
             servicesService.saveService(service);
+        } else {
+            Notification.show("Tienes que indicar como minimo el titulo y la fecha del servicio.");
         }
     }
 
@@ -330,54 +333,66 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
             service = servicesService.getServiceById(Long.parseLong(s));
             subjectTextField.setValue(service.getSubject());
             dateDatePicker.setValue(service.getDate());
-            eventTimeSelect.setValue(service.getEventTime());
+            eventTimeSelect.setValue(service.getEventTime() != null ? service.getEventTime() : "");
             initTimePicker.setValue(service.getInitTime() != null ? LocalTime.parse(service.getInitTime()) : LocalTime.MIN);
             endTimePicker.setValue(service.getEndTime() != null ? LocalTime.parse(service.getEndTime()) : LocalTime.MIN);
             initKmTextField.setValue(service.getInitKm() != null ? service.getInitKm() : "");
             endKmTextField.setValue(service.getEndKm() != null ? service.getEndKm() : "");
-            volunteers.forEach(
-                    volunteer -> {
-                        if (volunteer.getId().intValue() == service.getBoss()) {
-                            bossSelect.setValue(volunteer);
+
+            if (service.getBoss() != null) {
+                volunteers.forEach(
+                        volunteer -> {
+                            if (volunteer.getId().intValue() == service.getBoss()) {
+                                bossSelect.setValue(volunteer);
+                            }
                         }
-                    }
-            );
+                );
+            }
 
-            volunteerListBox.select(volunteers.stream().filter(volunteer -> {
-                AtomicBoolean out = new AtomicBoolean(false);
-                service.getVolunteers().forEach(
-                        volunteer1 -> {
-                            if(volunteer.getId().equals(volunteer1.getId())) {
-                                out.set(true);
-                            }
-                        });
-                return out.get();
-            }).collect(Collectors.toList()));
+            if (service.getVolunteers() != null) {
+                volunteerListBox.select(volunteers.stream().filter(volunteer -> {
+                    AtomicBoolean out = new AtomicBoolean(false);
+                    service.getVolunteers().forEach(
+                            volunteer1 -> {
+                                if(volunteer.getId().equals(volunteer1.getId())) {
+                                    out.set(true);
+                                }
+                            });
+                    return out.get();
+                }).collect(Collectors.toList()));
+            }
 
-            vehicleListBox.select(vehicles.stream().filter(vehicle -> {
-                AtomicBoolean out = new AtomicBoolean(false);
-                service.getVehicles().forEach(
-                        vehicle1 -> {
-                            if(vehicle.getId().equals(vehicle1.getId())) {
-                                out.set(true);
-                            }
-                        });
-                return out.get();
-            }).collect(Collectors.toList()));
+            if (service.getVehicles() != null) {
+                vehicleListBox.select(vehicles.stream().filter(vehicle -> {
+                    AtomicBoolean out = new AtomicBoolean(false);
+                    service.getVehicles().forEach(
+                            vehicle1 -> {
+                                if(vehicle.getId().equals(vehicle1.getId())) {
+                                    out.set(true);
+                                }
+                            });
+                    return out.get();
+                }).collect(Collectors.toList()));
+            }
 
-            commentMessageList.setItems(service.getComments().stream().map(
-                    serviceComment -> {
-                        MessageListItem messageListItem = new MessageListItem();
-                        messageListItem.setText(serviceComment.getCommentMessage());
-                        messageListItem.setTime(serviceComment.getCommentDatetime().toInstant());
-                        Volunteer volunteer = volunteerService.getVolunteerById(serviceComment.getUserId());
-                        messageListItem.setUserName(
-                                volunteer.getVolunteerCode() +
-                                " - " + volunteer.getFirstname() + " " + volunteer.getFirstlastname());
-                        return messageListItem;
-                    }).collect(Collectors.toList()));
+            if (service.getComments() != null) {
+                commentMessageList.setItems(service.getComments().stream().map(
+                        serviceComment -> {
+                            MessageListItem messageListItem = new MessageListItem();
+                            messageListItem.setText(serviceComment.getCommentMessage());
+                            messageListItem.setTime(serviceComment.getCommentDatetime().toInstant());
+                            Volunteer volunteer = volunteerService.getVolunteerById(serviceComment.getUserId());
+                            messageListItem.setUserName(
+                                    volunteer.getVolunteerCode() +
+                                            " - " + volunteer.getFirstname() + " " + volunteer.getFirstlastname());
+                            return messageListItem;
+                        }).collect(Collectors.toList()));
+            }
 
-            uploadedFileGrid.setItems(service.getFiles());
+            if (service.getFiles() != null) {
+                uploadedFileGrid.setItems(service.getFiles());
+            }
+
         }
     }
 

@@ -9,8 +9,8 @@ import java.util.List;
 public interface VehiclesRepository extends JpaRepository<Vehicle, Integer> {
 
     @Query(
-            value = "SELECT v.* FROM pcMasnouInt.vehicles v " +
-                    "LEFT JOIN pcMasnouInt.service_vehicles sv ON v.id = sv.vehicleId " +
+            value = "SELECT v.* FROM pcMasnouProd.vehicles v " +
+                    "LEFT JOIN pcMasnouProd.service_vehicles sv ON v.id = sv.vehicleId " +
                     "WHERE sv.serviceId = ?1",
             nativeQuery = true)
     public List<Vehicle> findAllByServiceId(Integer serviceId);

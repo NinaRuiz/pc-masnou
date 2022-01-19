@@ -37,7 +37,9 @@ public class ServicesService {
             service.get().setVolunteers(volunteerService.getServiceVolunteers(service.get().getId().intValue()));
             service.get().setVehicles(vehicleService.getVehiclesByServiceId(service.get().getId().intValue()));
             service.get().setComments(serviceCommentsService.getServiceCommentsByServiceId(service.get().getId().intValue()));
-            service.get().setBossVolunteer(volunteerService.getVolunteerById(service.get().getBoss()));
+            if (service.get().getBoss() != null) {
+                service.get().setBossVolunteer(volunteerService.getVolunteerById(service.get().getBoss()));
+            }
             service.get().setFiles(serviceFilesService.getServiceUploadedFiles(service.get().getId().intValue()));
             return service.get();
         } else {
@@ -52,14 +54,27 @@ public class ServicesService {
     @Transactional
     public void saveService(org.vaadin.example.models.Service service) {
         org.vaadin.example.models.Service newService = servicesRepository.save(service);
-        volunteerService.deleteServiceVolunteers(newService.getId().intValue());
-        volunteerService.saveServiceVolunteers(service.getVolunteers(), newService.getId().intValue());
-        vehicleService.deleteServiceVehiclesByServiceId(newService.getId().intValue());
-        vehicleService.saveServiceVehicles(service.getVehicles(), newService.getId().intValue());
-        serviceCommentsService.deleteServiceCommentsByServiceId(newService.getId().intValue());
-        serviceCommentsService.saveServiceComments(service.getComments(), newService.getId().intValue());
-        serviceFilesService.deleteServiceFiles(service.getId().intValue());
-        serviceFilesService.saveServiceUploadedFiles(service.getFiles(), newService.getId().intValue());
+
+        if (service.getVolunteers() != null) {
+            volunteerService.deleteServiceVolunteers(newService.getId().intValue());
+            volunteerService.saveServiceVolunteers(service.getVolunteers(), newService.getId().intValue());
+        }
+
+        if (service.getVehicles() != null) {
+            vehicleService.deleteServiceVehiclesByServiceId(newService.getId().intValue());
+            vehicleService.saveServiceVehicles(service.getVehicles(), newService.getId().intValue());
+        }
+
+        if (service.getComments() != null) {
+            serviceCommentsService.deleteServiceCommentsByServiceId(newService.getId().intValue());
+            serviceCommentsService.saveServiceComments(service.getComments(), newService.getId().intValue());
+        }
+
+        if (service.getFiles() != null) {
+            serviceFilesService.deleteServiceFiles(service.getId().intValue());
+            serviceFilesService.saveServiceUploadedFiles(service.getFiles(), newService.getId().intValue());
+        }
+
     }
 
 }
