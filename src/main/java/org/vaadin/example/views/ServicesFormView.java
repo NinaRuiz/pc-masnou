@@ -108,10 +108,12 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
             createService.setText("Guardar");
             createService.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             createService.addClickListener(click -> {
-                saveService();
-                createService.getUI().ifPresent(click2 -> {
-                    click2.navigate(ServicesListView.class);
-                });
+                if (saveService()) {
+                    createService.getUI().ifPresent(click2 -> {
+                        click2.navigate(ServicesListView.class);
+                    });
+                }
+
             });
 
             horizontalLayout.add(cancelService, createService);
@@ -314,11 +316,13 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
 
     }
 
-    private void saveService() {
+    private boolean saveService() {
         if (validateForm()) {
             servicesService.saveService(service);
+            return true;
         } else {
             Notification.show("Tienes que indicar como minimo el titulo y la fecha del servicio.");
+            return false;
         }
     }
 
