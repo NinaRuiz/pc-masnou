@@ -29,7 +29,7 @@ public class VolunteerService {
         this.serviceVolunteerRepository = serviceVolunteerRepository;
     }
 
-    public Volunteer saveVolunteer(Volunteer volunteer) throws NoSuchAlgorithmException {
+    public Volunteer saveVolunteer(Volunteer volunteer) {
         if (volunteer.getId() == null) {
             StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
             String encryptedPassword = passwordEncryptor.encryptPassword(volunteer.getUserPassword());
@@ -37,6 +37,14 @@ public class VolunteerService {
         }
         volunteer.setVolunteerCode(volunteer.getVolunteerCode().toUpperCase(Locale.ROOT));
         return volunteerRepository.save(volunteer);
+    }
+
+    public void savePassword(Volunteer volunteer) {
+        StrongPasswordEncryptor passwordEncryptor = new StrongPasswordEncryptor();
+        String encryptedPassword = passwordEncryptor.encryptPassword(volunteer.getUserPassword());
+        volunteer.setUserPassword(encryptedPassword);
+        volunteer.setVolunteerCode(volunteer.getVolunteerCode().toUpperCase(Locale.ROOT));
+        volunteerRepository.save(volunteer);
     }
 
     public Volunteer getVolunteerByVolunteerCode(String volunteerCode) {

@@ -9,8 +9,8 @@ import java.util.List;
 public interface VolunteerRepository extends JpaRepository<Volunteer, Long> {
 
     @Query(
-            value = "SELECT v.* FROM pcMasnouProd.volunteer v " +
-                    "LEFT JOIN pcMasnouProd.service_volunteer sv ON v.id = sv.volunteerId " +
+            value = "SELECT v.* FROM pcMasnouInt.volunteer v " +
+                    "LEFT JOIN pcMasnouInt.service_volunteer sv ON v.id = sv.volunteerId " +
                     "WHERE sv.serviceId = ?1",
             nativeQuery = true)
     public List<Volunteer> getVolunteersByServiceId(Integer serviceId);

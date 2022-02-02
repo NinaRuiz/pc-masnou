@@ -2,6 +2,8 @@ package org.vaadin.example.views;
 
 import com.flowingcode.vaadin.addons.googlemaps.GoogleMap;
 import com.flowingcode.vaadin.addons.googlemaps.LatLon;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -69,7 +71,7 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
     Select<Volunteer> bossSelect;
     MultiSelectListBox<Volunteer> volunteerListBox;
     MultiSelectListBox<Vehicle> vehicleListBox;
-    MessageList commentMessageList;
+    VerticalLayout commentMessageList;
     Grid<UploadedFile> uploadedFileGrid;
 
 
@@ -222,29 +224,51 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
                 }
             });
 
-            commentMessageList = new MessageList();
+            commentMessageList = new VerticalLayout();
             commentMessageList.setWidthFull();
+
 
             MessageInput messageInput = new MessageInput();
             messageInput.setWidthFull();
             messageInput.addSubmitListener(submitEvent -> {
                 if (submitEvent.isFromClient()) {
-                    List<MessageListItem> messageListItemList = new ArrayList<>(commentMessageList.getItems());
-                    Volunteer volunteer = volunteerService.getVolunteerById(SessionService.session.getVolunteerId());
-                    MessageListItem messageListItem = new MessageListItem(
-                            submitEvent.getValue(),
-                            new Date().toInstant(),
-                            volunteer.getVolunteerCode() + " - " + volunteer.getFirstname() + " " + volunteer.getFirstlastname());
-                    messageListItemList.add(messageListItem);
-                    commentMessageList.setItems(messageListItemList);
-                    service.setComments(new ArrayList<>());
-                    service.getComments().addAll(messageListItemList.stream().map(messageListItem1 -> {
+                    System.out.println(submitEvent.getValue().length());
+                    if (submitEvent.getValue().length() > 765) {
+                        String[] messageWords = submitEvent.getValue().split("\\.");
+                        List<String> comments = new ArrayList<>();
+                        StringBuilder comment = new StringBuilder();
+                        for (int i = 0; i < messageWords.length; i++) {
+                            System.out.println(messageWords[i]);
+                            if ((comment.length() + messageWords[i].length() + 1) > 750) {
+                                System.out.println(comment);
+                                comments.add(comment.toString());
+                                comment = new StringBuilder();
+                                comment.append(messageWords[i] + ".");
+                            } else {
+                                comment.append(messageWords[i] + ".");
+                            }
+
+                            if ((i + 1) == messageWords.length) {
+                                comments.add(comment.toString());
+                            }
+                        }
+                        comments.forEach(s -> {
+                            ServiceComment serviceComment = new ServiceComment();
+                            serviceComment.setCommentDatetime(new Date());
+                            serviceComment.setCommentMessage(s);
+                            serviceComment.setUserId(SessionService.session.getVolunteerId());
+                            service.getComments().add(serviceComment);
+                            System.out.println(s);
+                            addCommentToMessageList(serviceComment);
+                        });
+                    } else {
                         ServiceComment serviceComment = new ServiceComment();
-                        serviceComment.setCommentDatetime(Date.from(messageListItem1.getTime()));
-                        serviceComment.setCommentMessage(messageListItem1.getText());
+                        serviceComment.setCommentDatetime(new Date());
+                        serviceComment.setCommentMessage(submitEvent.getValue());
                         serviceComment.setUserId(SessionService.session.getVolunteerId());
-                        return serviceComment;
-                    }).collect(Collectors.toList()));
+                        service.getComments().add(serviceComment);
+                        addCommentToMessageList(serviceComment);
+                    }
                 }
             });
 
@@ -380,17 +404,7 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
             }
 
             if (service.getComments() != null) {
-                commentMessageList.setItems(service.getComments().stream().map(
-                        serviceComment -> {
-                            MessageListItem messageListItem = new MessageListItem();
-                            messageListItem.setText(serviceComment.getCommentMessage());
-                            messageListItem.setTime(serviceComment.getCommentDatetime().toInstant());
-                            Volunteer volunteer = volunteerService.getVolunteerById(serviceComment.getUserId());
-                            messageListItem.setUserName(
-                                    volunteer.getVolunteerCode() +
-                                            " - " + volunteer.getFirstname() + " " + volunteer.getFirstlastname());
-                            return messageListItem;
-                        }).collect(Collectors.toList()));
+                service.getComments().forEach(this::addCommentToMessageList);
             }
 
             if (service.getFiles() != null) {
@@ -409,5 +423,44 @@ public class ServicesFormView extends MainLayout implements HasUrlParameter<Stri
             }
             return null;
         });
+    }
+
+    private void addCommentToMessageList(ServiceComment serviceComment) {
+        String lastCommentUserId = null;
+        if (commentMessageList.getChildren().findAny().isPresent()) {
+            Component component = commentMessageList.getChildren().collect(Collectors.toList())
+                    .get((int) commentMessageList.getChildren().count() - 1);
+            lastCommentUserId = component.getId().orElse(null);
+        }
+        boolean showAvatarAndName = true;
+        if (lastCommentUserId != null && lastCommentUserId.equals(serviceComment.getUserId().toString())) {
+            showAvatarAndName = false;
+        }
+        HorizontalLayout hl1 = new HorizontalLayout();
+        HorizontalLayout hl2 = new HorizontalLayout();
+        VerticalLayout vl = new VerticalLayout();
+        vl.setPadding(false);
+        vl.setMargin(false);
+        if (showAvatarAndName) {
+            Volunteer volunteer = volunteerService.getVolunteerById(serviceComment.getUserId());
+            Avatar avatar = new Avatar(volunteer.getVolunteerCode());
+            avatar.setAbbreviation(volunteer.getVolunteerCode().substring(2));
+            hl1.add(avatar);
+            Label volunteerLabel = new Label(volunteer.getVolunteerCode() +
+                    " - " + volunteer.getFirstname() + " " + volunteer.getFirstlastname());
+            volunteerLabel.getStyle().set("font-weight", "bold");
+            hl2.add(volunteerLabel);
+        } else {
+            Label timeComment = new Label(serviceComment.getCommentDatetime().toString());
+            timeComment.getStyle().set("font-size", "10px");
+            hl2.add(timeComment);
+            vl.setMargin(true);
+            vl.getStyle().set("margin-left", "70px");
+        }
+        vl.add(hl2);
+        vl.add(new Label(serviceComment.getCommentMessage()));
+        hl1.add(vl);
+        hl1.setId(serviceComment.getUserId().toString());
+        commentMessageList.add(hl1);
     }
 }
